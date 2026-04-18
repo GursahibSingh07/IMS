@@ -15,25 +15,36 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.ims.ui.navigation.AppDestination
 import com.example.ims.ui.screens.dashboard.DashboardScreen
+import com.example.ims.ui.screens.login.LoginScreen
 import com.example.ims.ui.screens.studentsearch.StudentSearchScreen
 import com.example.ims.ui.screens.timetable.TimetableScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IMSApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestination.DASHBOARD) }
+    var currentDestination by rememberSaveable { mutableStateOf(AppDestination.LOGIN) }
 
-    BackHandler(enabled = currentDestination != AppDestination.DASHBOARD) {
+    BackHandler(
+        enabled = currentDestination != AppDestination.DASHBOARD &&
+            currentDestination != AppDestination.LOGIN
+    ) {
         currentDestination = AppDestination.DASHBOARD
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text(text = currentDestination.title) })
+            if (currentDestination != AppDestination.LOGIN) {
+                TopAppBar(title = { Text(text = currentDestination.title) })
+            }
         }
     ) { innerPadding ->
         when (currentDestination) {
+            AppDestination.LOGIN -> LoginScreen(
+                modifier = Modifier.padding(innerPadding),
+                onLoginClick = { currentDestination = AppDestination.DASHBOARD }
+            )
+
             AppDestination.DASHBOARD -> DashboardScreen(
                 modifier = Modifier.padding(innerPadding),
                 onOpenTimetable = { currentDestination = AppDestination.TIMETABLE },
@@ -48,6 +59,7 @@ fun IMSApp() {
 
 private val AppDestination.title: String
     get() = when (this) {
+        AppDestination.LOGIN -> "IMS Login"
         AppDestination.DASHBOARD -> "IMS Dashboard"
         AppDestination.TIMETABLE -> "Time Table"
         AppDestination.STUDENT_SEARCH -> "Student Search"
