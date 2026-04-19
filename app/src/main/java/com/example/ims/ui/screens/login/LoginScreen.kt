@@ -1,24 +1,19 @@
 package com.example.ims.ui.screens.login
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.AlternateEmail
@@ -52,32 +47,52 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ims.core.MockAuthService
+import com.example.ims.core.MockUserProfile
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onLoginClick: () -> Unit
+    onLoginSuccess: (MockUserProfile) -> Unit
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
+    var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var showPassword by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val (tempUsername, tempPassword) = remember { MockAuthService.temporaryCredentials() }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF7F9FB))
     ) {
-        DecorativeBlobs()
+        // Decorative circles from IMS screen.svg
+        Box(
+            modifier = Modifier
+                .requiredWidth(400.dp)
+                .requiredHeight(400.dp)
+                .offset(x = 41.dp, y = (-88).dp)
+                .clip(RoundedCornerShape(200.dp))
+                .background(Color(0x0D00113A))
+        )
+        Box(
+            modifier = Modifier
+                .requiredWidth(300.dp)
+                .requiredHeight(300.dp)
+                .offset(x = (-19).dp, y = 628.dp)
+                .clip(RoundedCornerShape(150.dp))
+                .background(Color(0x33D1E1F4))
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 28.dp),
+                .padding(top = 188.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LogoBlock()
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             Text(
                 text = "IMS Portal",
                 style = TextStyle(
@@ -87,37 +102,42 @@ fun LoginScreen(
                 )
             )
             Text(
-                text = "Education panel sign in",
+                text = "A simple institute workspace for daily operations.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF50606F),
-                modifier = Modifier.padding(top = 6.dp, bottom = 20.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
 
+            Spacer(modifier = Modifier.height(48.dp))
+
             Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color.Black, RoundedCornerShape(12.dp))
+                    .requiredWidth(354.dp)
+                    .requiredHeight(313.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "Email address",
+                        text = "EMAIL OR USERNAME",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF50606F)
                     )
+
                     LoginField(
-                        value = email,
-                        onValueChange = { email = it },
-                        hint = "username@institute.edu",
+                        value = username,
+                        onValueChange = { username = it },
+                        hint = "Enter username",
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.AlternateEmail,
                                 contentDescription = null,
-                                tint = Color(0xFF757682)
+                                tint = Color(0xFF475569)
                             )
                         },
                         keyboardType = KeyboardType.Email,
@@ -125,31 +145,31 @@ fun LoginScreen(
                     )
 
                     Text(
-                        text = "Password",
+                        text = "PASSWORD",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF50606F)
                     )
+
                     LoginField(
                         value = password,
                         onValueChange = { password = it },
-                        hint = "................",
+                        hint = "............",
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
                                 contentDescription = null,
-                                tint = Color(0xFF757682)
+                                tint = Color(0xFF475569)
                             )
                         },
                         trailingIcon = {
-                            val icon = if (showPassword) {
-                                Icons.Outlined.VisibilityOff
-                            } else {
-                                Icons.Outlined.Visibility
-                            }
                             Icon(
-                                imageVector = icon,
+                                imageVector = if (showPassword) {
+                                    Icons.Outlined.VisibilityOff
+                                } else {
+                                    Icons.Outlined.Visibility
+                                },
                                 contentDescription = "Toggle password visibility",
-                                tint = Color(0xFF757682),
+                                tint = Color(0xFF475569),
                                 modifier = Modifier.clickable { showPassword = !showPassword }
                             )
                         },
@@ -162,25 +182,31 @@ fun LoginScreen(
                         imeAction = ImeAction.Done
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    LoginButton(
+                        onClick = {
+                            val profile = MockAuthService.validateCredentials(username, password)
+                            if (profile != null) {
+                                errorMessage = null
+                                onLoginSuccess(profile)
+                            } else {
+                                errorMessage = "Invalid credentials. Use temporary credentials below."
+                            }
+                        }
+                    )
+
+                    Text(
+                        text = "Temp: $tempUsername / $tempPassword",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF50606F)
+                    )
+
+                    if (errorMessage != null) {
                         Text(
-                            text = "Remember me",
-                            color = Color(0xFF50606F),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Text(
-                            text = "Forgot password?",
-                            color = Color(0xFF00113A),
+                            text = errorMessage.orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
+                            color = Color(0xFFB42318)
                         )
                     }
-
-                    LoginButton(onClick = onLoginClick)
                 }
             }
         }
@@ -188,31 +214,11 @@ fun LoginScreen(
 }
 
 @Composable
-private fun BoxScope.DecorativeBlobs() {
-    Box(
-        modifier = Modifier
-            .size(300.dp)
-            .align(Alignment.TopEnd)
-            .padding(top = 8.dp, end = 6.dp)
-            .clip(CircleShape)
-            .background(Color(0x0D00113A))
-    )
-
-    Box(
-        modifier = Modifier
-            .size(220.dp)
-            .align(Alignment.BottomStart)
-            .padding(start = 8.dp, bottom = 20.dp)
-            .clip(CircleShape)
-            .background(Color(0x33D1E1F4))
-    )
-}
-
-@Composable
 private fun LogoBlock() {
     Box(
         modifier = Modifier
-            .size(width = 80.dp, height = 67.dp)
+            .requiredWidth(80.dp)
+            .requiredHeight(67.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF00113A)),
         contentAlignment = Alignment.Center
@@ -220,8 +226,7 @@ private fun LogoBlock() {
         Icon(
             imageVector = Icons.Outlined.School,
             contentDescription = "IMS logo",
-            tint = Color.White,
-            modifier = Modifier.size(34.dp)
+            tint = Color.White
         )
     }
 }
@@ -241,8 +246,8 @@ private fun LoginField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
+            .requiredWidth(290.dp)
+            .requiredHeight(51.dp),
         singleLine = true,
         textStyle = TextStyle(color = Color(0xFF00113A), fontSize = 15.sp),
         placeholder = {
@@ -265,7 +270,6 @@ private fun LoginField(
             unfocusedContainerColor = Color(0xFFF2F4F6),
             focusedBorderColor = Color.Transparent,
             unfocusedBorderColor = Color.Transparent,
-            disabledBorderColor = Color.Transparent,
             focusedTextColor = Color(0xFF00113A),
             unfocusedTextColor = Color(0xFF00113A)
         )
@@ -274,23 +278,22 @@ private fun LoginField(
 
 @Composable
 private fun LoginButton(onClick: () -> Unit) {
-    Row(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+            .requiredWidth(290.dp)
+            .requiredHeight(56.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFF00113A), Color(0xFF0A1C52))
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF00113A), Color(0xFF0C1F56))
                 )
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Log in to continue",
+            text = "Login to Dashboard",
             color = Color.White,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
@@ -298,7 +301,8 @@ private fun LoginButton(onClick: () -> Unit) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
             contentDescription = null,
-            tint = Color.White
+            tint = Color.White,
+            modifier = Modifier.align(Alignment.CenterEnd)
         )
     }
 }

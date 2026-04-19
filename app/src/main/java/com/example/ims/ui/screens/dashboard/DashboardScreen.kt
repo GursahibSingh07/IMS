@@ -1,199 +1,719 @@
 package com.example.ims.ui.screens.dashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.TableRows
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.ims.core.MockUserProfile
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DashboardScreen(
-    modifier: Modifier = Modifier,
-    onOpenTimetable: () -> Unit,
-    onOpenStudentSearch: () -> Unit
-) {
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-
-    val modules = remember {
-        listOf(
-            ModuleItem("Time Table", "Schedule and limits", Icons.Outlined.CalendarMonth, onOpenTimetable),
-            ModuleItem("Students", "Search and details", Icons.Outlined.People, onOpenStudentSearch),
-            ModuleItem("Courses", "Manage batches", Icons.Outlined.Class, {}),
-            ModuleItem("Admissions", "Forms and alerts", Icons.Outlined.AssignmentInd, {}),
-            ModuleItem("Settings", "General config", Icons.Outlined.Settings, {}),
-            ModuleItem("Finance", "Currency & fees", Icons.Outlined.Payments, {}),
-        )
-    }
-
-    val filteredModules = if (searchQuery.isEmpty()) {
-        modules
-    } else {
-        modules.filter { it.title.contains(searchQuery, ignoreCase = true) }
-    }
-
-    // Effect for "Instant Navigation" via search bar
-    LaunchedEffect(searchQuery) {
-        val exactMatch = modules.find { it.title.equals(searchQuery, ignoreCase = true) }
-        if (exactMatch != null) {
-            exactMatch.onClick()
-            searchQuery = "" // Clear after navigation
-        }
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Welcome to IMS",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-        )
-        Text(
-            text = "Institutional Management System",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Innovative Search Bar for instant navigation
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search modules (e.g. 'Time Table')") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            singleLine = true,
-            shape = RoundedCornerShape(28.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
-                focusedBorderColor = MaterialTheme.colorScheme.primary
-            )
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Quick Modules",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        // Iconic Grid Layout
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            items(filteredModules) { module ->
-                ModuleCard(module)
-            }
-        }
-
-        // Latest News Section (at bottom or scrollable)
-        NewsSection()
-        
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-data class ModuleItem(
+private data class SearchOverlayItem(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
+    val iconContainerColor: Color,
+    val iconTint: Color,
     val onClick: () -> Unit
 )
 
 @Composable
-fun ModuleCard(module: ModuleItem) {
-    Card(
-        onClick = module.onClick,
+fun DashboardScreen(
+    modifier: Modifier = Modifier,
+    userProfile: MockUserProfile,
+    onOpenTimetable: () -> Unit,
+    onOpenStudentSearch: () -> Unit,
+    onLogout: () -> Unit
+) {
+    var isNavigationMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var isRightMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var isSearchOverlayOpen by rememberSaveable { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+
+    val searchItems = remember(onOpenTimetable, onOpenStudentSearch) {
+        listOf(
+            SearchOverlayItem(
+                title = "Search Bar",
+                subtitle = "Dashboard module",
+                icon = Icons.Outlined.Search,
+                iconContainerColor = Color(0xFFDBE1FF),
+                iconTint = Color(0xFF0B3AA4)
+            ) {
+                isSearchOverlayOpen = true
+            },
+            SearchOverlayItem(
+                title = "News",
+                subtitle = "Latest institute updates",
+                icon = Icons.Outlined.Campaign,
+                iconContainerColor = Color(0xFFD4E4F6),
+                iconTint = Color(0xFF0B3A61)
+            ) {
+                isSearchOverlayOpen = false
+            },
+            SearchOverlayItem(
+                title = "Time Table",
+                subtitle = "Open scheduling module",
+                icon = Icons.Outlined.TableRows,
+                iconContainerColor = Color(0xFF002F1D),
+                iconTint = Color.White
+            ) {
+                isSearchOverlayOpen = false
+                onOpenTimetable()
+            },
+            SearchOverlayItem(
+                title = "Student Search",
+                subtitle = "Open student module",
+                icon = Icons.Outlined.Person,
+                iconContainerColor = Color(0xFFD1E1F4),
+                iconTint = Color(0xFF09395E)
+            ) {
+                isSearchOverlayOpen = false
+                onOpenStudentSearch()
+            }
+        )
+    }
+
+    val filteredItems = remember(searchItems, searchQuery) {
+        if (searchQuery.isBlank()) {
+            searchItems
+        } else {
+            searchItems.filter { item ->
+                item.title.contains(searchQuery, ignoreCase = true) ||
+                    item.subtitle.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    val blurredModifier = if (isSearchOverlayOpen) Modifier.blur(1.dp) else Modifier
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF7F9FB))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(blurredModifier),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            DashboardTopBar(
+                displayName = userProfile.displayName,
+                onOpenNavigation = { isNavigationMenuOpen = true },
+                onOpenRightMenu = { isRightMenuOpen = true }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SearchBarModule(
+                onClick = {
+                    searchQuery = ""
+                    isSearchOverlayOpen = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            NewsModuleCard()
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "A concise dashboard surface aligned with your IMS workflow.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF50606F),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 29.dp)
+            )
+        }
+
+        if (isNavigationMenuOpen || isRightMenuOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xAA191C1E))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isNavigationMenuOpen = false
+                        isRightMenuOpen = false
+                    }
+            )
+        }
+
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.CenterStart),
+            visible = isNavigationMenuOpen,
+            enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
+        ) {
+            NavigationMenuPanel(
+                userProfile = userProfile,
+                onClose = { isNavigationMenuOpen = false },
+                onOpenTimetable = {
+                    isNavigationMenuOpen = false
+                    onOpenTimetable()
+                },
+                onOpenStudentSearch = {
+                    isNavigationMenuOpen = false
+                    onOpenStudentSearch()
+                }
+            )
+        }
+
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.TopEnd),
+            visible = isRightMenuOpen,
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+        ) {
+            RightMenuPanel(
+                userProfile = userProfile,
+                onClose = { isRightMenuOpen = false },
+                onLogout = {
+                    isRightMenuOpen = false
+                    onLogout()
+                }
+            )
+        }
+
+        if (isSearchOverlayOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x73000000))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isSearchOverlayOpen = false
+                    }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 76.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                SearchOverlayPanel(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    items = filteredItems,
+                    onClose = { isSearchOverlayOpen = false }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardTopBar(
+    displayName: String,
+    onOpenNavigation: () -> Unit,
+    onOpenRightMenu: () -> Unit
+) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp),
+            .requiredHeight(56.dp)
+            .background(Color(0xFF00113A))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onOpenNavigation) {
+                Icon(
+                    imageVector = Icons.Outlined.Menu,
+                    contentDescription = "Open navigation menu",
+                    tint = Color.White
+                )
+            }
+
+            Text(
+                text = "IMS Dashboard",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color(0xFFCBD5E1), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = displayName.take(1),
+                        color = Color(0xFF00113A),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                IconButton(onClick = onOpenRightMenu) {
+                    Icon(
+                        imageVector = Icons.Outlined.MoreVert,
+                        contentDescription = "Open profile menu",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchBarModule(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .requiredWidth(354.dp)
+            .requiredHeight(46.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(23.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Search,
+                contentDescription = null,
+                tint = Color(0xFF757682)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "Search modules and shortcuts",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF757682)
+            )
+        }
+    }
+}
+
+@Composable
+private fun NewsModuleCard() {
+    Card(
+        modifier = Modifier
+            .requiredWidth(354.dp)
+            .heightIn(min = 280.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "News",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF00113A),
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            NewsLine("Batch transfer approvals are open for the spring semester.")
+            HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(vertical = 8.dp))
+            NewsLine("Faculty meeting scheduled on Wednesday at 2:30 PM.")
+            HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(vertical = 8.dp))
+            NewsLine("Midterm result moderation closes this Friday.")
+        }
+    }
+}
+
+@Composable
+private fun NewsLine(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = Color(0xFF344054)
+    )
+}
+
+@Composable
+private fun NavigationMenuPanel(
+    userProfile: MockUserProfile,
+    onClose: () -> Unit,
+    onOpenTimetable: () -> Unit,
+    onOpenStudentSearch: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxHeight()
+            .requiredWidth(320.dp),
+        color = Color.White
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .requiredHeight(64.dp)
+                    .background(Color(0xFF00113A))
+                    .padding(horizontal = 14.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Menu,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Navigation",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Close navigation",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            NavigationMenuItem(
+                title = "Dashboard",
+                subtitle = userProfile.institute,
+                onClick = onClose
+            )
+            NavigationMenuItem(
+                title = "Time Table",
+                subtitle = "Open scheduling module",
+                onClick = onOpenTimetable
+            )
+            NavigationMenuItem(
+                title = "Student Search",
+                subtitle = "Open student module",
+                onClick = onOpenStudentSearch
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavigationMenuItem(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFF00113A),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF50606F)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RightMenuPanel(
+    userProfile: MockUserProfile,
+    onClose: () -> Unit,
+    onLogout: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(top = 16.dp, end = 14.dp)
+            .requiredWidth(256.dp)
+            .requiredHeight(196.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE5E7EB))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = module.icon,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Profile Menu",
+                    color = Color(0xFF00113A),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Close profile menu",
+                        tint = Color(0xFF00113A)
+                    )
+                }
+            }
+
             Text(
-                text = module.title,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                text = userProfile.displayName,
+                color = Color(0xFF00113A),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = module.subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                text = userProfile.role,
+                color = Color(0xFF475569),
+                style = MaterialTheme.typography.bodySmall
             )
+            Text(
+                text = userProfile.email,
+                color = Color(0xFF475569),
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onLogout),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.Logout,
+                    contentDescription = null,
+                    tint = Color(0xFF00113A)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Logout",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF00113A),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
 
 @Composable
-fun NewsSection() {
+private fun SearchOverlayPanel(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    items: List<SearchOverlayItem>,
+    onClose: () -> Unit
+) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-        ),
-        shape = RoundedCornerShape(16.dp)
+            .requiredWidth(358.dp)
+            .requiredHeight(631.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Latest News",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = "New batch transfers are now open for the 2024 Spring Semester.",
-                    style = MaterialTheme.typography.bodySmall
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .requiredHeight(84.dp)
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    singleLine = true,
+                    placeholder = { Text("Search", color = Color(0xFF757682)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = null,
+                            tint = Color(0xFF757682)
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Close search",
+                            tint = Color(0xFF757682),
+                            modifier = Modifier.clickable(onClick = onClose)
+                        )
+                    },
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .requiredWidth(238.dp)
+                        .requiredHeight(40.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFF2F4F6),
+                        unfocusedContainerColor = Color(0xFFF2F4F6),
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    )
                 )
             }
-            Icon(Icons.Outlined.Campaign, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                items(items) { item ->
+                    SearchResultRow(item = item)
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .requiredHeight(62.dp)
+                    .background(Color(0xFFF2F4F6))
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .requiredWidth(48.dp)
+                            .requiredHeight(20.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFFE0E3E5))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .requiredWidth(60.dp)
+                            .requiredHeight(20.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFFE0E3E5))
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun SearchResultRow(item: SearchOverlayItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = item.onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .requiredWidth(40.dp)
+                .requiredHeight(40.dp)
+                .background(item.iconContainerColor, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = item.icon,
+                contentDescription = null,
+                tint = item.iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFF00113A),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = item.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF50606F)
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color(0xFF00113A)
+        )
     }
 }

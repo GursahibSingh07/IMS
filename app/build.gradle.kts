@@ -4,16 +4,16 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ims"
+    namespace = "com.GssSmk.ims"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.ims"
+        applicationId = "com.GssSmk.ims"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "APPIDENTIFIER", "\"2024701001.0\"")
+        buildConfigField("String", "APPIDENTIFIER", "\"\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
