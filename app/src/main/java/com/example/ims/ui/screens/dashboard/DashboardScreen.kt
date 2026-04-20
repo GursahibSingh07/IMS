@@ -105,6 +105,7 @@ fun DashboardScreen(
     userProfile: MockUserProfile,
     onOpenTimetable: () -> Unit,
     onOpenStudentSearch: () -> Unit,
+    onOpenMyProfile: () -> Unit,
     onLogout: () -> Unit
 ) {
     var isNavigationMenuOpen by rememberSaveable { mutableStateOf(false) }
@@ -200,6 +201,11 @@ fun DashboardScreen(
                 displayName = userProfile.displayName,
                 showNavigationButton = !isNavigationMenuOpen,
                 onOpenNavigation = { isNavigationMenuOpen = true },
+                onOpenProfile = {
+                    if (userProfile.role == Role.STUDENT) {
+                        onOpenMyProfile()
+                    }
+                },
                 onOpenRightMenu = { isRightMenuOpen = true }
             )
 
@@ -215,6 +221,45 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             LatestNewsSection()
+
+            if (userProfile.role == Role.STUDENT) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clickable { onOpenMyProfile() },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "My Student Profile",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFF00113A),
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "View your academic and personal details",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = Color(0xFF00113A)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -314,6 +359,7 @@ private fun DashboardTopBar(
     displayName: String,
     showNavigationButton: Boolean,
     onOpenNavigation: () -> Unit,
+    onOpenProfile: () -> Unit,
     onOpenRightMenu: () -> Unit
 ) {
     Box(
@@ -356,7 +402,8 @@ private fun DashboardTopBar(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFF27457A)),
+                        .background(Color(0xFF27457A))
+                        .clickable { onOpenProfile() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

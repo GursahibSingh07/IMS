@@ -25,9 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.ims.core.MockDatabase
 import com.example.ims.core.MockUserProfile
 import com.example.ims.core.Role
+import com.example.ims.core.StudentRecord
 import com.example.ims.ui.screens.dashboard.NavigationMenuPanel
 import com.example.ims.ui.screens.dashboard.RightMenuPanel
 
@@ -38,38 +38,6 @@ private data class StudentDirectoryEntry(
     val course: String,
     val stream: String,
     val cgpa: Double
-)
-
-private data class StudentMeta(
-    val batch: String,
-    val scholarship: String,
-    val course: String,
-    val stream: String,
-    val cgpa: Double
-)
-
-private val studentMetaByUsername = mapOf(
-    "student1" to StudentMeta(
-        batch = "2024",
-        scholarship = "Merit",
-        course = "B.Tech",
-        stream = "Computer Science",
-        cgpa = 9.1
-    ),
-    "student2" to StudentMeta(
-        batch = "2023",
-        scholarship = "Need-Based",
-        course = "BBA",
-        stream = "Digital Marketing",
-        cgpa = 8.3
-    ),
-    "student3" to StudentMeta(
-        batch = "2022",
-        scholarship = "Sports",
-        course = "BFA",
-        stream = "Fine Arts",
-        cgpa = 7.4
-    )
 )
 
 private val cgpaRanges = listOf("9.0+", "8.0 - 8.99", "7.0 - 7.99", "Below 7.0")
@@ -88,9 +56,12 @@ private fun matchesCgpaRange(cgpa: Double, selectedRange: String): Boolean {
 fun StudentSearchScreen(
     modifier: Modifier = Modifier,
     userProfile: MockUserProfile,
+    students: List<MockUserProfile>,
+    studentRecords: List<StudentRecord>,
     onLogout: () -> Unit,
     onOpenTimetable: () -> Unit,
-    onOpenDashboard: () -> Unit
+    onOpenDashboard: () -> Unit,
+    onOpenStudentProfile: (String) -> Unit
 ) {
     if (userProfile.role != Role.ACADEMIC_OFFICE) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -110,16 +81,13 @@ fun StudentSearchScreen(
     var selectedStream by rememberSaveable { mutableStateOf(setOf<String>()) }
     var selectedCgpaRange by rememberSaveable { mutableStateOf(setOf<String>()) }
 
-    val studentDirectory = remember {
-        MockDatabase.students.map { student ->
-            val meta = studentMetaByUsername[student.username] ?: StudentMeta(
-                batch = "2024",
-                scholarship = "None",
-                course = "General",
-                stream = student.institute,
-                cgpa = 7.0
-            )
+    val recordsByUsername = remember(studentRecords) {
+        studentRecords.associateBy { it.username }
+    }
 
+    val studentDirectory = remember(students, recordsByUsername) {
+        students.mapNotNull { student ->
+            val meta = recordsByUsername[student.username] ?: return@mapNotNull null
             StudentDirectoryEntry(
                 profile = student,
                 batch = meta.batch,
@@ -270,7 +238,10 @@ fun StudentSearchScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                     items(filteredStudents) { student ->
-                        StudentListItem(student)
+                        StudentListItem(
+                            student = student,
+                            onClick = { onOpenStudentProfile(student.profile.username) }
+                        )
                     }
                 }
 
@@ -426,9 +397,14 @@ private fun MultiSelectChipRow(
 }
 
 @Composable
-private fun StudentListItem(student: StudentDirectoryEntry) {
+private fun StudentListItem(
+    student: StudentDirectoryEntry,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

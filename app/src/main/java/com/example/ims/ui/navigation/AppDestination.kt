@@ -4,5 +4,6 @@ enum class AppDestination {
     LOGIN,
     DASHBOARD,
     TIMETABLE,
-    STUDENT_SEARCH
+    STUDENT_SEARCH,
+    STUDENT_PROFILE
 }

@@ -53,12 +53,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ims.core.MockAuthService
 import com.example.ims.core.MockUserProfile
+import com.example.ims.core.Role
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
+    quickUsers: List<MockUserProfile>,
+    onValidateCredentials: (String, String) -> MockUserProfile?,
     onLoginSuccess: (MockUserProfile) -> Unit
 ) {
     var username by rememberSaveable { mutableStateOf("") }
@@ -174,12 +176,12 @@ fun LoginScreen(
 
                     LoginButton(
                         onClick = {
-                            val profile = MockAuthService.validateCredentials(username, password)
+                            val profile = onValidateCredentials(username, password)
                             if (profile != null) {
                                 errorMessage = null
                                 onLoginSuccess(profile)
                             } else {
-                                errorMessage = "Invalid credentials. Password is same as username."
+                                errorMessage = "Invalid credentials."
                             }
                         }
                     )
@@ -198,12 +200,20 @@ fun LoginScreen(
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF64748B)
                     )
+                    val adminUser = quickUsers.firstOrNull { it.role == Role.ACADEMIC_OFFICE }
+                    val facultyUser = quickUsers.firstOrNull { it.role == Role.FACULTY }
+                    val studentUser = quickUsers.firstOrNull { it.role == Role.STUDENT }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Button(
-                            onClick = { username = "admin"; password = "admin" },
+                            onClick = {
+                                adminUser?.let {
+                                    username = it.username
+                                    password = it.username
+                                }
+                            },
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
                             modifier = Modifier.height(32.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
@@ -211,7 +221,12 @@ fun LoginScreen(
                             Text("Admin", fontSize = 10.sp)
                         }
                         Button(
-                            onClick = { username = "faculty1"; password = "faculty1" },
+                            onClick = {
+                                facultyUser?.let {
+                                    username = it.username
+                                    password = it.username
+                                }
+                            },
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
                             modifier = Modifier.height(32.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
@@ -219,7 +234,12 @@ fun LoginScreen(
                             Text("Faculty", fontSize = 10.sp)
                         }
                         Button(
-                            onClick = { username = "student1"; password = "student1" },
+                            onClick = {
+                                studentUser?.let {
+                                    username = it.username
+                                    password = it.username
+                                }
+                            },
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
                             modifier = Modifier.height(32.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
