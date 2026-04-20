@@ -1,100 +1,229 @@
 package com.example.ims.ui.screens.timetable
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.Save
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ims.core.MockUserProfile
+import com.example.ims.core.Role
+import com.example.ims.ui.screens.dashboard.NavigationMenuPanel
+import com.example.ims.ui.screens.dashboard.RightMenuPanel
 
 private data class ScheduleCell(
     val code: String,
     val title: String,
     val room: String,
+    val faculty: String,
+    val department: String,
+    val courseName: String,
+    val timeSlot: String,
     val bgColor: Color,
     val textColor: Color
 )
 
-@Composable
-fun TimetableScreen(modifier: Modifier = Modifier) {
-    var showCourseCreation by rememberSaveable { mutableStateOf(false) }
+private data class CourseEntry(
+    val faculty: String,
+    val department: String,
+    val courseName: String,
+    val room: String,
+    val timeSlot: String
+)
 
-    if (showCourseCreation) {
-        CourseCreationScreen(
-            modifier = modifier,
-            onBackToTimetableList = { showCourseCreation = false }
-        )
-    } else {
-        TimetableListScreen(
-            modifier = modifier,
-            onOpenCourseCreation = { showCourseCreation = true }
-        )
+private val facultyList = listOf(
+    "Dr. Aris Thorne",
+    "Prof. Sarah Lee",
+    "Dr. James Bond",
+    "Dr. Maria Garcia",
+    "Prof. John Smith"
+)
+
+private val departmentList = listOf(
+    "Computer Science",
+    "Digital Marketing",
+    "Security Studies",
+    "Business Administration",
+    "Fine Arts"
+)
+
+private val courseNameList = listOf(
+    "Data Structures",
+    "Web Development",
+    "Database Management",
+    "Cloud Computing",
+    "Cybersecurity Basics",
+    "Marketing Analytics",
+    "Business Law"
+)
+
+private val roomList = listOf(
+    "A101",
+    "A102",
+    "B201",
+    "B202",
+    "C301",
+    "C302",
+    "Auditorium 1"
+)
+
+private val timeSlotList = listOf(
+    "09:00 AM - 10:30 AM",
+    "10:45 AM - 12:15 PM",
+    "01:00 PM - 02:30 PM",
+    "02:45 PM - 04:15 PM",
+    "04:30 PM - 06:00 PM",
+    "06:15 PM - 07:45 PM"
+)
+
+private val initialTimetableEntries = listOf(
+    CourseEntry("Dr. Aris Thorne", "Computer Science", "Intro to CS", "Hall A", "09:00 AM - 10:30 AM"),
+    CourseEntry("Prof. Sarah Lee", "Digital Marketing", "Marketing Strategy", "R 302", "09:00 AM - 10:30 AM"),
+    CourseEntry("Dr. James Bond", "Security Studies", "Cybersecurity Basics", "Lab 4", "09:00 AM - 10:30 AM"),
+    CourseEntry("Dr. Maria Garcia", "Fine Arts", "Fine Arts", "Annex", "11:00 AM - 12:30 PM"),
+    CourseEntry("Prof. John Smith", "Business Administration", "Business Law", "Hall C", "11:00 AM - 12:30 PM")
+)
+
+private fun CourseEntry.toScheduleCell(codeFallback: String, bgColor: Color, textColor: Color): ScheduleCell {
+    return ScheduleCell(
+        code = codeFallback,
+        title = courseName,
+        room = room,
+        faculty = faculty,
+        department = department,
+        courseName = courseName,
+        timeSlot = timeSlot,
+        bgColor = bgColor,
+        textColor = textColor
+    )
+}
+
+@Composable
+fun TimetableScreen(
+    modifier: Modifier = Modifier,
+    userProfile: MockUserProfile,
+    onLogout: () -> Unit,
+    onOpenStudentSearch: () -> Unit,
+    onOpenDashboard: () -> Unit
+) {
+    var showCourseCreation by rememberSaveable { mutableStateOf(false) }
+    var isNavigationMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var isRightMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var timetableEntries by rememberSaveable { mutableStateOf(initialTimetableEntries) }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        if (showCourseCreation && userProfile.role == Role.ACADEMIC_OFFICE) {
+            CourseCreationScreen(
+                existingEntries = timetableEntries,
+                onBackToTimetableList = { showCourseCreation = false },
+                onSaveCourse = { entry ->
+                    timetableEntries = timetableEntries + entry
+                    showCourseCreation = false
+                }
+            )
+        } else {
+            TimetableListScreen(
+                userProfile = userProfile,
+                entries = timetableEntries,
+                onOpenCourseCreation = { showCourseCreation = true },
+                onOpenNavigation = { isNavigationMenuOpen = true },
+                onOpenRightMenu = { isRightMenuOpen = true }
+            )
+        }
+
+        if (isNavigationMenuOpen || isRightMenuOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xAA191C1E))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isNavigationMenuOpen = false
+                        isRightMenuOpen = false
+                    }
+            )
+        }
+
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.TopStart),
+            visible = isNavigationMenuOpen,
+            enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
+        ) {
+            NavigationMenuPanel(
+                userRole = userProfile.role,
+                onOpenDashboard = {
+                    isNavigationMenuOpen = false
+                    onOpenDashboard()
+                },
+                onOpenTimetable = { isNavigationMenuOpen = false },
+                onOpenStudentRegistry = {
+                    isNavigationMenuOpen = false
+                    onOpenStudentSearch()
+                },
+                onOpenSettings = {
+                    isNavigationMenuOpen = false
+                    isRightMenuOpen = true
+                },
+                onOpenLogout = {
+                    isNavigationMenuOpen = false
+                    onLogout()
+                }
+            )
+        }
+
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.TopEnd),
+            visible = isRightMenuOpen,
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+        ) {
+            RightMenuPanel(onLogout = onLogout)
+        }
     }
 }
 
 @Composable
 private fun TimetableListScreen(
-    modifier: Modifier = Modifier,
-    onOpenCourseCreation: () -> Unit
+    userProfile: MockUserProfile,
+    entries: List<CourseEntry>,
+    onOpenCourseCreation: () -> Unit,
+    onOpenNavigation: () -> Unit,
+    onOpenRightMenu: () -> Unit
 ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF7F9FB))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 152.dp)
+                .padding(bottom = if (userProfile.role == Role.ACADEMIC_OFFICE) 152.dp else 16.dp)
         ) {
             TimetableTopBar(
                 title = "IMS Time Table",
-                actionLabel = "Time Table List",
-                onActionClick = {}
+                displayName = userProfile.displayName,
+                onOpenNavigation = onOpenNavigation,
+                onOpenRightMenu = onOpenRightMenu
             )
 
             Column(
@@ -105,7 +234,7 @@ private fun TimetableListScreen(
                 Text(
                     text = "WEEKLY ORCHESTRATION",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF64748B),
+                    color = Color(0xFF50606F),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -116,19 +245,92 @@ private fun TimetableListScreen(
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
-                TimetableGrid()
+                TimetableGrid(entries)
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "CURRENT COURSE ENTRIES",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF50606F),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    entries.forEach { entry ->
+                        CourseEntryCard(entry)
+                    }
+                }
             }
         }
 
-        TimetableBottomActions(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onOpenCourseCreation = onOpenCourseCreation
-        )
+        if (userProfile.role == Role.ACADEMIC_OFFICE) {
+            TimetableBottomActions(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                onOpenCourseCreation = onOpenCourseCreation
+            )
+        }
     }
 }
 
 @Composable
-private fun TimetableGrid() {
+private fun TimetableTopBar(
+    title: String,
+    displayName: String,
+    onOpenNavigation: () -> Unit,
+    onOpenRightMenu: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .requiredHeight(56.dp)
+            .background(Color(0xFF00113A))
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onOpenNavigation) {
+                    Icon(Icons.Outlined.Menu, contentDescription = null, tint = Color.White)
+                }
+                Text(text = title, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(Color(0xFF27457A), RoundedCornerShape(4.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = displayName.take(1),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                IconButton(onClick = onOpenRightMenu) {
+                    Icon(Icons.Outlined.MoreVert, contentDescription = null, tint = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimetableGrid(entries: List<CourseEntry>) {
+    val monday = entries.filterIndexed { index, entry -> index % 2 == 0 }
+    val tuesday = entries.filterIndexed { index, entry -> index % 2 == 1 }
+
     Surface(
         shape = RoundedCornerShape(14.dp),
         border = BorderStroke(1.dp, Color(0xFFDDE2E8)),
@@ -142,7 +344,7 @@ private fun TimetableGrid() {
                     .padding(vertical = 10.dp)
             ) {
                 Box(
-                    modifier = Modifier.requiredWidth(70.dp),
+                    modifier = Modifier.requiredWidth(60.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -152,11 +354,11 @@ private fun TimetableGrid() {
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                DayHeaderCell("Mon", "12")
-                DayHeaderCell("Tue", "13")
-                DayHeaderCell("Wed", "14")
-                DayHeaderCell("Thu", "15")
-                DayHeaderCell("Fri", "16")
+                DayHeaderCell("Mon")
+                DayHeaderCell("Tue")
+                DayHeaderCell("Wed")
+                DayHeaderCell("Thu")
+                DayHeaderCell("Fri")
             }
 
             HorizontalDivider(color = Color(0xFFE7EBF0))
@@ -164,11 +366,11 @@ private fun TimetableGrid() {
             TimeSlotRow(
                 timeLabel = "09:00",
                 cells = listOf(
-                    ScheduleCell("ARCH101", "Design Theory", "Hall A", Color(0xFFDBE1FF), Color(0xFF00113A)),
+                    monday.getOrNull(0)?.toScheduleCell("CS101", Color(0xFFDBE1FF), Color(0xFF00113A)),
                     null,
-                    ScheduleCell("HIST204", "Urban Evolution", "R 302", Color(0xFFD4E4F6), Color(0xFF324255)),
+                    tuesday.getOrNull(0)?.toScheduleCell("MKT201", Color(0xFFD4E4F6), Color(0xFF324255)),
                     null,
-                    ScheduleCell("LAB10", "CAD Workshop", "Lab 4", Color(0xFFCFF0DE), Color(0xFF084D31))
+                    entries.getOrNull(2)?.toScheduleCell("CS102", Color(0xFFCFF0DE), Color(0xFF084D31))
                 )
             )
 
@@ -177,10 +379,10 @@ private fun TimetableGrid() {
             TimeSlotRow(
                 timeLabel = "11:00",
                 cells = listOf(
+                    entries.getOrNull(3)?.toScheduleCell("ART105", Color(0xFFFDE8E8), Color(0xFF9B1C1C)),
                     null,
-                    ScheduleCell("SEM402", "Thesis Seminar", "Annex", Color(0xFF00113A), Color.White),
+                    entries.getOrNull(4)?.toScheduleCell("ENG301", Color(0xFFFEF3C7), Color(0xFF92400E)),
                     null,
-                    ScheduleCell("HIST204", "Urban Evolution", "Hall C", Color(0xFFD4E4F6), Color(0xFF324255)),
                     null
                 )
             )
@@ -189,23 +391,15 @@ private fun TimetableGrid() {
 }
 
 @Composable
-private fun DayHeaderCell(day: String, date: String) {
-    Column(
-        modifier = Modifier
-            .weight(1f)
-            .padding(horizontal = 2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun RowScope.DayHeaderCell(day: String) {
+    Box(
+        modifier = Modifier.weight(1f),
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = day.uppercase(),
+            text = day,
             style = MaterialTheme.typography.labelSmall,
             color = Color(0xFF64748B),
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = date,
-            style = MaterialTheme.typography.titleSmall,
-            color = Color(0xFF00113A),
             fontWeight = FontWeight.Bold
         )
     }
@@ -219,12 +413,12 @@ private fun TimeSlotRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .requiredHeight(110.dp)
+            .requiredHeight(80.dp)
     ) {
         Box(
             modifier = Modifier
-                .requiredWidth(70.dp)
-                .fillMaxSize(),
+                .requiredWidth(60.dp)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -238,42 +432,70 @@ private fun TimeSlotRow(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(6.dp)
+                    .fillMaxHeight()
+                    .padding(2.dp)
             ) {
                 if (cell != null) {
                     Card(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(containerColor = cell.bgColor),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(8.dp)
+                                .padding(4.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = cell.code,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = cell.textColor,
-                                fontWeight = FontWeight.Bold
+                                style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                color = cell.textColor
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = cell.title,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = cell.textColor,
-                                fontWeight = FontWeight.SemiBold
+                                style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.SemiBold),
+                                color = cell.textColor
                             )
-                            Spacer(modifier = Modifier.weight(1f))
                             Text(
                                 text = cell.room,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = TextStyle(fontSize = 9.sp),
                                 color = cell.textColor
                             )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CourseEntryCard(entry: CourseEntry) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = entry.courseName,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF00113A)
+            )
+            Text(
+                text = "${entry.faculty} • ${entry.department}",
+                color = Color(0xFF475569),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "${entry.room} • ${entry.timeSlot}",
+                color = Color(0xFF64748B),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -286,287 +508,253 @@ private fun TimetableBottomActions(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE6EAF0))
+        shadowElevation = 8.dp
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = onOpenCourseCreation,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF00113A)
-                    ),
-                    border = BorderStroke(1.dp, Color(0xFF00113A)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("ADD COURSE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                }
-
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF00113A)),
-                    border = BorderStroke(1.dp, Color(0xFF00113A)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(0.55f)
-                ) {
-                    Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("SAVE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                }
-
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(0.6f)
-                ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("DELETE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                }
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = onOpenCourseCreation,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00113A))
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("ADD COURSE")
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            PlaceholderFooterButton()
-            Spacer(modifier = Modifier.height(8.dp))
-            PlaceholderFooterButton()
         }
-    }
-}
-
-@Composable
-private fun PlaceholderFooterButton() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .requiredHeight(42.dp)
-            .border(1.dp, Color(0xFFE2E6EC), RoundedCornerShape(8.dp))
-            .background(Color.White, RoundedCornerShape(8.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "BUTTON FULL-W PRIMARY",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color(0xFF94A3B8),
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 
 @Composable
 private fun CourseCreationScreen(
-    modifier: Modifier = Modifier,
-    onBackToTimetableList: () -> Unit
+    existingEntries: List<CourseEntry>,
+    onBackToTimetableList: () -> Unit,
+    onSaveCourse: (CourseEntry) -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFFF7F9FB))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp)
-        ) {
-            TimetableTopBar(
-                title = "IMS Time Table",
-                actionLabel = null,
-                onActionClick = onBackToTimetableList
-            )
+    var facultyName by rememberSaveable { mutableStateOf("") }
+    var department by rememberSaveable { mutableStateOf("") }
+    var courseName by rememberSaveable { mutableStateOf("") }
+    var room by rememberSaveable { mutableStateOf("") }
+    var timeSlot by rememberSaveable { mutableStateOf("") }
+    var validationError by rememberSaveable { mutableStateOf<String?>(null) }
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 28.dp, vertical = 14.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F6F6))
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 26.dp, vertical = 26.dp)) {
-                    Text(
-                        text = "CURRICULUM MANAGEMENT",
-                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
-                        color = Color(0xFF62728A),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Add New Course",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color(0xFF00113A),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Register a new academic module into the institutional database.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF4F5F74)
-                    )
+    fun submitCourse() {
+        val trimmedFaculty = facultyName.trim()
+        val trimmedDepartment = department.trim()
+        val trimmedCourse = courseName.trim()
+        val trimmedRoom = room.trim()
+        val trimmedTimeSlot = timeSlot.trim()
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                    CourseField("COURSE NAME", "e.g. Advanced Macroeconomics")
-                    CourseField("COURSE CODE", "ECO-402")
-                    CourseField("ROOM NUMBER", "Hall B-12")
-                    DropdownField("COURSE DURATION", "Select Duration")
-                    FacultySearchField()
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    Button(
-                        onClick = onBackToTimetableList,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF002366), contentColor = Color.White),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .requiredHeight(50.dp)
-                    ) {
-                        Text("Submit Course", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Course details will be synchronized across the institute's timetable immediately after submission.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF94A3B8),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+        validationError = when {
+            trimmedFaculty.isBlank() || trimmedDepartment.isBlank() || trimmedCourse.isBlank() || trimmedRoom.isBlank() || trimmedTimeSlot.isBlank() -> {
+                "Select a value for every field."
             }
+            existingEntries.any { it.timeSlot == trimmedTimeSlot && it.faculty.equals(trimmedFaculty, ignoreCase = true) } -> {
+                "${trimmedFaculty} is already assigned at ${trimmedTimeSlot}."
+            }
+            existingEntries.any { it.timeSlot == trimmedTimeSlot && it.room.equals(trimmedRoom, ignoreCase = true) } -> {
+                "Room ${trimmedRoom} is already booked at ${trimmedTimeSlot}."
+            }
+            else -> null
+        }
+
+        if (validationError == null) {
+            onSaveCourse(
+                CourseEntry(
+                    faculty = trimmedFaculty,
+                    department = trimmedDepartment,
+                    courseName = trimmedCourse,
+                    room = trimmedRoom,
+                    timeSlot = trimmedTimeSlot
+                )
+            )
         }
     }
-}
 
-@Composable
-private fun CourseField(label: String, placeholder: String) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-        color = Color(0xFF00113A),
-        fontWeight = FontWeight.Bold
-    )
-    Spacer(modifier = Modifier.height(6.dp))
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .requiredHeight(56.dp)
-            .background(Color(0xFFE1E4E8), RoundedCornerShape(8.dp))
-            .padding(horizontal = 14.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Text(text = placeholder, color = Color(0xFF6B7280), style = MaterialTheme.typography.bodyLarge)
-    }
-    Spacer(modifier = Modifier.height(12.dp))
-}
-
-@Composable
-private fun DropdownField(label: String, value: String) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-        color = Color(0xFF00113A),
-        fontWeight = FontWeight.Bold
-    )
-    Spacer(modifier = Modifier.height(6.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .requiredHeight(56.dp)
-            .background(Color(0xFFE1E4E8), RoundedCornerShape(8.dp))
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(value, color = Color(0xFF1F2937), style = MaterialTheme.typography.bodyLarge)
-        Spacer(modifier = Modifier.weight(1f))
-        Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null, tint = Color(0xFF64748B))
-    }
-    Spacer(modifier = Modifier.height(12.dp))
-}
-
-@Composable
-private fun FacultySearchField() {
-    Text(
-        text = "ASSIGNED FACULTY",
-        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-        color = Color(0xFF00113A),
-        fontWeight = FontWeight.Bold
-    )
-    Spacer(modifier = Modifier.height(6.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .requiredHeight(56.dp)
-            .background(Color(0xFFE3EBEB), RoundedCornerShape(8.dp))
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = Icons.Outlined.Search, contentDescription = null, tint = Color(0xFF2A4386))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "Search faculty member...",
-            color = Color(0xFF6B7280),
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-@Composable
-private fun TimetableTopBar(
-    title: String,
-    actionLabel: String?,
-    onActionClick: () -> Unit
-) {
-    Surface(
-        color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE6EAF0)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF7F9FB))) {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .requiredHeight(56.dp)
+                .background(Color(0xFF00113A))
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Outlined.Menu,
-                        contentDescription = null,
-                        tint = Color(0xFF00113A)
-                    )
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Add Timetable Entry", color = Color.White, fontWeight = FontWeight.Bold)
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFF00113A),
+                    text = "Cancel",
+                    color = Color.White,
+                    modifier = Modifier.clickable { onBackToTimetableList() },
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "COURSE SELECTION",
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
+                color = Color(0xFF50606F),
+                fontWeight = FontWeight.Bold
+            )
+
+            SearchableDropdownField(
+                label = "Faculty Name",
+                placeholder = "Search faculty",
+                value = facultyName,
+                options = facultyList,
+                onValueChange = { facultyName = it }
+            )
+
+            SearchableDropdownField(
+                label = "Department",
+                placeholder = "Search department",
+                value = department,
+                options = departmentList,
+                onValueChange = { department = it }
+            )
+
+            SearchableDropdownField(
+                label = "Course Name",
+                placeholder = "Search course",
+                value = courseName,
+                options = courseNameList,
+                onValueChange = { courseName = it }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "LOGISTICS",
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
+                color = Color(0xFF50606F),
+                fontWeight = FontWeight.Bold
+            )
+
+            SearchableDropdownField(
+                label = "Room",
+                placeholder = "Search room",
+                value = room,
+                options = roomList,
+                onValueChange = { room = it }
+            )
+
+            SearchableDropdownField(
+                label = "Time Slot",
+                placeholder = "Search time slot",
+                value = timeSlot,
+                options = timeSlotList,
+                onValueChange = { timeSlot = it }
+            )
+
+            validationError?.let {
+                Text(
+                    text = it,
+                    color = Color(0xFFBA1A1A),
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )
             }
+        }
 
-            if (actionLabel != null) {
-                Text(
-                    text = actionLabel.uppercase(),
-                    modifier = Modifier
-                        .background(Color(0xFF00113A), RoundedCornerShape(6.dp))
-                        .clickable(onClick = onActionClick)
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
+        Surface(color = Color.White, shadowElevation = 10.dp) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onBackToTimetableList,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("CANCEL")
+                }
+                Button(
+                    onClick = { submitCourse() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00113A)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("SAVE ENTRY", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
 }
+
+@Composable
+private fun SearchableDropdownField(
+    label: String,
+    placeholder: String,
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var searchText by rememberSaveable(label) { mutableStateOf(value) }
+    val filteredOptions = remember(searchText, options) {
+        options.filter { option ->
+            searchText.isBlank() || option.contains(searchText, ignoreCase = true)
+        }
+    }
+
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = Color(0xFF334155),
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+
+        Box {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                    expanded = true
+                    onValueChange(it)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = true },
+                placeholder = { Text(placeholder) },
+                trailingIcon = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true
+            )
+
+            DropdownMenu(
+                expanded = expanded && filteredOptions.isNotEmpty(),
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth().background(Color.White)
+            ) {
+                filteredOptions.take(6).forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            searchText = option
+                            onValueChange(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+

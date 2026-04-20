@@ -13,7 +13,7 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "APPIDENTIFIER", "\"\"")
+        buildConfigField("String", "APPIDENTIFIER", "\"2024001.2024002\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

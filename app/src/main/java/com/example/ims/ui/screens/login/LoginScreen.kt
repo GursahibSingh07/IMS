@@ -21,6 +21,12 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -60,14 +66,12 @@ fun LoginScreen(
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val (tempUsername, tempPassword) = remember { MockAuthService.temporaryCredentials() }
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF7F9FB))
     ) {
-        // Decorative circles from IMS screen.svg
+        // Decorative circles
         Box(
             modifier = Modifier
                 .requiredWidth(400.dp)
@@ -76,19 +80,12 @@ fun LoginScreen(
                 .clip(RoundedCornerShape(200.dp))
                 .background(Color(0x0D00113A))
         )
-        Box(
-            modifier = Modifier
-                .requiredWidth(300.dp)
-                .requiredHeight(300.dp)
-                .offset(x = (-19).dp, y = 628.dp)
-                .clip(RoundedCornerShape(150.dp))
-                .background(Color(0x33D1E1F4))
-        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 188.dp),
+                .padding(top = 100.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LogoBlock()
@@ -108,18 +105,19 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Card(
                 modifier = Modifier
                     .requiredWidth(354.dp)
-                    .requiredHeight(313.dp),
+                    .padding(bottom = 20.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .padding(horizontal = 32.dp, vertical = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -163,21 +161,13 @@ fun LoginScreen(
                         },
                         trailingIcon = {
                             Icon(
-                                imageVector = if (showPassword) {
-                                    Icons.Outlined.VisibilityOff
-                                } else {
-                                    Icons.Outlined.Visibility
-                                },
+                                imageVector = if (showPassword) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                                 contentDescription = "Toggle password visibility",
                                 tint = Color(0xFF475569),
                                 modifier = Modifier.clickable { showPassword = !showPassword }
                             )
                         },
-                        visualTransformation = if (showPassword) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
+                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     )
@@ -189,23 +179,53 @@ fun LoginScreen(
                                 errorMessage = null
                                 onLoginSuccess(profile)
                             } else {
-                                errorMessage = "Invalid credentials. Use temporary credentials below."
+                                errorMessage = "Invalid credentials. Password is same as username."
                             }
                         }
                     )
 
-                    Text(
-                        text = "Temp: $tempUsername / $tempPassword",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF50606F)
-                    )
-
                     if (errorMessage != null) {
                         Text(
-                            text = errorMessage.orEmpty(),
+                            text = errorMessage!!,
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFB42318)
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Quick Login (Simulation):",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFF64748B)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = { username = "admin"; password = "admin" },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
+                        ) {
+                            Text("Admin", fontSize = 10.sp)
+                        }
+                        Button(
+                            onClick = { username = "faculty1"; password = "faculty1" },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
+                        ) {
+                            Text("Faculty", fontSize = 10.sp)
+                        }
+                        Button(
+                            onClick = { username = "student1"; password = "student1" },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color.Black)
+                        ) {
+                            Text("Student", fontSize = 10.sp)
+                        }
                     }
                 }
             }

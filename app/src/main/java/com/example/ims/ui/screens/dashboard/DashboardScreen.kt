@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccessTime
@@ -76,6 +77,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ims.core.MockUserProfile
+import com.example.ims.core.Role
 
 private data class OverlayStudent(
     val name: String,
@@ -148,8 +150,8 @@ fun DashboardScreen(
     }
 
     val filteredStudents = remember(students, searchQuery) {
-        if (searchQuery.isBlank()) {
-            students
+        if (searchQuery.isBlank() || userProfile.role != Role.ACADEMIC_OFFICE) {
+            emptyList()
         } else {
             students.filter { student ->
                 student.name.contains(searchQuery, ignoreCase = true) ||
@@ -239,6 +241,7 @@ fun DashboardScreen(
             exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
         ) {
             NavigationMenuPanel(
+                userRole = userProfile.role,
                 onOpenDashboard = {
                     isNavigationMenuOpen = false
                 },
@@ -253,6 +256,10 @@ fun DashboardScreen(
                 onOpenSettings = {
                     isNavigationMenuOpen = false
                     isRightMenuOpen = true
+                },
+                onOpenLogout = {
+                    isNavigationMenuOpen = false
+                    onLogout()
                 }
             )
         }
@@ -263,7 +270,7 @@ fun DashboardScreen(
             enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
             exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
         ) {
-            RightMenuPanel()
+            RightMenuPanel(onLogout = onLogout)
         }
 
         if (isSearchOverlayOpen) {
@@ -531,11 +538,13 @@ private fun CompactNewsCard(
 }
 
 @Composable
-private fun NavigationMenuPanel(
+fun NavigationMenuPanel(
+    userRole: Role,
     onOpenDashboard: () -> Unit,
     onOpenTimetable: () -> Unit,
     onOpenStudentRegistry: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenLogout: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -583,33 +592,44 @@ private fun NavigationMenuPanel(
                 onClick = onOpenDashboard
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            if (userRole == com.example.ims.core.Role.ACADEMIC_OFFICE) {
+                Spacer(modifier = Modifier.height(18.dp))
 
-            Text(
-                text = "MANAGEMENT",
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-                color = Color(0xFF8A95A9),
-                fontWeight = FontWeight.Bold
-            )
+                Text(
+                    text = "MANAGEMENT",
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
+                    color = Color(0xFF8A95A9),
+                    fontWeight = FontWeight.Bold
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            NavigationMenuEntry(
-                icon = Icons.Outlined.Groups,
-                title = "Student Registry",
-                onClick = onOpenStudentRegistry
-            )
+                NavigationMenuEntry(
+                    icon = Icons.Outlined.Groups,
+                    title = "Student Registry",
+                    onClick = onOpenStudentRegistry
+                )
+            }
+            
             NavigationMenuEntry(
                 icon = Icons.Outlined.Settings,
                 title = "Settings",
                 onClick = onOpenSettings
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            NavigationMenuEntry(
+                icon = Icons.AutoMirrored.Outlined.ExitToApp,
+                title = "Logout",
+                onClick = onOpenLogout
             )
         }
     }
 }
 
 @Composable
-private fun NavigationMenuEntry(
+fun NavigationMenuEntry(
     icon: ImageVector,
     title: String,
     onClick: () -> Unit
@@ -638,12 +658,12 @@ private fun NavigationMenuEntry(
 }
 
 @Composable
-private fun RightMenuPanel() {
+fun RightMenuPanel(onLogout: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(top = 58.dp, end = 12.dp)
             .requiredWidth(250.dp)
-            .requiredHeight(182.dp),
+            .requiredHeight(230.dp),
         shape = RoundedCornerShape(2.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE1E4E7))
     ) {
@@ -678,26 +698,29 @@ private fun RightMenuPanel() {
 }
 
 @Composable
-private fun SettingsPreferenceRow(
+fun SettingsPreferenceRow(
     icon: ImageVector,
-    title: String
+    title: String,
+    onClick: () -> Unit = {},
+    titleColor: Color = Color(0xFF1A1F29)
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .requiredHeight(44.dp),
+            .requiredHeight(44.dp)
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFF0B1E44),
+            tint = if (titleColor == Color(0xFF1A1F29)) Color(0xFF0B1E44) else titleColor,
             modifier = Modifier.size(19.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))
         Text(
             text = title,
-            color = Color(0xFF1A1F29),
+            color = titleColor,
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.weight(1f))

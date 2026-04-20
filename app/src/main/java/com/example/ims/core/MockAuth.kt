@@ -2,26 +2,40 @@ package com.example.ims.core
 
 data class MockUserProfile(
     val displayName: String,
-    val role: String,
+    val role: Role,
     val institute: String,
-    val email: String
+    val email: String,
+    val username: String
 )
 
-object MockAuthService {
-    private const val TEMP_USERNAME = "ims_admin"
-    private const val TEMP_PASSWORD = "ims@123"
+enum class Role {
+    ACADEMIC_OFFICE,
+    FACULTY,
+    STUDENT
+}
 
-    private val mockProfile = MockUserProfile(
-        displayName = "Ava Malik",
-        role = "Administrator",
-        institute = "IMS Demo Campus",
-        email = "admin@ims.local"
+object MockDatabase {
+    val users = listOf(
+        // 1 Authorized User (Academic Office)
+        MockUserProfile("Ava Malik", Role.ACADEMIC_OFFICE, "IMS Main Campus", "admin@ims.edu", "admin"),
+        
+        // 3 Faculty Users
+        MockUserProfile("Dr. Aris Thorne", Role.FACULTY, "Computer Science", "thorne@ims.edu", "faculty1"),
+        MockUserProfile("Prof. Sarah Lee", Role.FACULTY, "Digital Marketing", "lee@ims.edu", "faculty2"),
+        MockUserProfile("Dr. James Bond", Role.FACULTY, "Security Studies", "bond@ims.edu", "faculty3"),
+        
+        // 3 Student Users
+        MockUserProfile("Jameson Miller", Role.STUDENT, "Computer Science", "jameson@ims.edu", "student1"),
+        MockUserProfile("Jamie Chen", Role.STUDENT, "Digital Marketing", "jamie@ims.edu", "student2"),
+        MockUserProfile("Robert Ross", Role.STUDENT, "Fine Arts", "robert@ims.edu", "student3")
     )
 
-    fun validateCredentials(username: String, password: String): MockUserProfile? {
-        val isValid = username.trim() == TEMP_USERNAME && password == TEMP_PASSWORD
-        return if (isValid) mockProfile else null
-    }
+    val students = users.filter { it.role == Role.STUDENT }
+}
 
-    fun temporaryCredentials(): Pair<String, String> = TEMP_USERNAME to TEMP_PASSWORD
+object MockAuthService {
+    fun validateCredentials(username: String, password: String): MockUserProfile? {
+        // password is same as username for simulation
+        return MockDatabase.users.find { it.username == username && password == username }
+    }
 }
