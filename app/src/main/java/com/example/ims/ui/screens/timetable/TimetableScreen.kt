@@ -473,11 +473,10 @@ private fun TimetableListScreen(
             val overlaps = startBlockIndex < otherEnd && endExclusive > otherStart
             if (!overlaps) return@forEach
 
-            val otherTemplate = templates.find { it.id == allocation.templateId } ?: return@forEach
-            if (otherTemplate.faculty.equals(template.faculty, ignoreCase = true)) {
+            if (allocation.faculty.equals(template.faculty, ignoreCase = true)) {
                 return "Faculty conflict: ${template.faculty} already has a class at this time."
             }
-            if (otherTemplate.classroom.equals(template.classroom, ignoreCase = true)) {
+            if (allocation.classroom.equals(template.classroom, ignoreCase = true)) {
                 return "Room conflict: ${template.classroom} is already occupied at this time."
             }
         }
@@ -494,9 +493,8 @@ private fun TimetableListScreen(
         // Subject weekly limit
         val subjectBlockCounts = mutableMapOf<String, Int>()
         currentAllocations.forEach { alloc ->
-            val template = currentTemplates.find { it.id == alloc.templateId } ?: return@forEach
-            subjectBlockCounts[template.course] =
-                (subjectBlockCounts[template.course] ?: 0) + alloc.blockCount
+            subjectBlockCounts[alloc.course] =
+                (subjectBlockCounts[alloc.course] ?: 0) + alloc.blockCount
         }
         subjectBlockCounts.forEach { (subject, count) ->
             if (count > MAX_SUBJECT_BLOCKS_PER_WEEK) {
@@ -507,9 +505,8 @@ private fun TimetableListScreen(
         // Faculty workload limit
         val facultyBlockCounts = mutableMapOf<String, Int>()
         currentAllocations.forEach { alloc ->
-            val template = currentTemplates.find { it.id == alloc.templateId } ?: return@forEach
-            facultyBlockCounts[template.faculty] =
-                (facultyBlockCounts[template.faculty] ?: 0) + alloc.blockCount
+            facultyBlockCounts[alloc.faculty] =
+                (facultyBlockCounts[alloc.faculty] ?: 0) + alloc.blockCount
         }
         facultyBlockCounts.forEach { (faculty, count) ->
             if (count > MAX_FACULTY_BLOCKS_PER_WEEK) {
@@ -724,7 +721,14 @@ private fun TimetableListScreen(
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                             colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryText)
                                         ) {
-                                            Text("Create", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1)
+                                            Text(
+                                                "Create",
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
                                         }
                                         OutlinedButton(
                                             onClick = {
@@ -737,7 +741,14 @@ private fun TimetableListScreen(
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                             colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryText)
                                         ) {
-                                            Text("Rename", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1)
+                                            Text(
+                                                "Rename",
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
                                         }
                                     }
                                     Row(
@@ -752,7 +763,14 @@ private fun TimetableListScreen(
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                             colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryText)
                                         ) {
-                                            Text("Set Primary", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1)
+                                            Text(
+                                                "Set Primary",
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
                                         }
                                         OutlinedButton(
                                             onClick = onDeleteCurrentTimetable,
@@ -766,7 +784,14 @@ private fun TimetableListScreen(
                                                 disabledContentColor = mutedText
                                             )
                                         ) {
-                                            Text("Delete", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1)
+                                            Text(
+                                                "Delete",
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
                                         }
                                     }
                                 }
@@ -1374,8 +1399,6 @@ private fun TimeBlockRow(
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     blockAllocations.forEach { allocation ->
-                        val instance =
-                            instances.find { it.id == allocation.templateId } ?: return@forEach
                         val allocationKey = AllocationKey(
                             allocationId = allocation.id
                         )
@@ -1409,7 +1432,7 @@ private fun TimeBlockRow(
                                 modifier = Modifier.padding(horizontal = 3.dp, vertical = 3.dp)
                             ) {
                                 Text(
-                                    text = instance.course,
+                                    text = allocation.course,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 9.sp,
                                     color = Color.White,
@@ -1418,7 +1441,7 @@ private fun TimeBlockRow(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = instance.classroom,
+                                    text = allocation.classroom,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 8.sp,
                                     color = Color(0xFFBBDEFB),
@@ -1426,7 +1449,7 @@ private fun TimeBlockRow(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = instance.faculty,
+                                    text = allocation.faculty,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 8.sp,
                                     color = Color(0xFF90CAF9),
