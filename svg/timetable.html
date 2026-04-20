@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IMS Portal - Time Table Management</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#d1e1f4",
+                    "primary": "#00113a",
+                    "on-tertiary-container": "#32a172",
+                    "on-error": "#ffffff",
+                    "surface": "#f7f9fb",
+                    "on-tertiary": "#ffffff",
+                    "on-background": "#191c1e",
+                    "error": "#ba1a1a",
+                    "surface-container": "#eceef0",
+                    "on-secondary-fixed": "#0d1d2a",
+                    "background": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary-container": "#556474",
+                    "primary-fixed": "#dbe1ff",
+                    "surface-tint": "#435b9f",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-fixed-variant": "#005235",
+                    "on-surface-variant": "#444650",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#b3c5ff",
+                    "tertiary-container": "#002f1d",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-secondary-fixed-variant": "#394857",
+                    "tertiary-fixed": "#8df7c1",
+                    "surface-variant": "#e0e3e5",
+                    "on-tertiary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#b3c5ff",
+                    "secondary-fixed-dim": "#b8c8da",
+                    "outline": "#757682",
+                    "on-surface": "#191c1e",
+                    "tertiary": "#00180c",
+                    "primary-container": "#002366",
+                    "secondary-fixed": "#d4e4f6",
+                    "on-primary-container": "#758dd5",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#71dba6",
+                    "surface-bright": "#f7f9fb",
+                    "outline-variant": "#c5c6d2",
+                    "surface-dim": "#d8dadc",
+                    "on-primary-fixed-variant": "#2a4386",
+                    "surface-container-high": "#e6e8ea",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-fixed": "#00174a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#50606f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        h1, h2, h3, .brand-font { font-family: 'Manrope', sans-serif; }
+        .schedule-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface">
+<!-- TopAppBar: Matches wireframe top-left/top-right menu pattern -->
+<header class="bg-white dark:bg-slate-900 border-b border-surface-container sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-4 py-3">
+<div class="flex items-center gap-3">
+<button class="text-primary p-1">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-bold text-primary dark:text-white text-base">IMS Time Table</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary text-white text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider">
+                Time Table List
+            </button>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 pt-6 pb-40">
+<!-- Content Section -->
+<div class="mb-6">
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-widest text-secondary mb-1 block">Weekly Orchestration</span>
+<h2 class="text-2xl font-extrabold text-primary tracking-tight">Time Table Management</h2>
+</div>
+<!-- Layout Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Main Schedule Canvas -->
+<div class="col-span-12">
+<div class="bg-white rounded-xl shadow-sm overflow-hidden border border-outline-variant/10">
+<!-- Day Header -->
+<div class="schedule-grid border-b border-surface-container bg-surface-container-low">
+<div class="p-3 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary opacity-40 text-sm">schedule</span>
+</div>
+<div class="p-3 text-center border-l border-surface-container-low">
+<span class="block text-[9px] font-bold text-secondary uppercase">Mon</span>
+<span class="text-sm font-bold text-primary">12</span>
+</div>
+<div class="p-3 text-center border-l border-surface-container-low">
+<span class="block text-[9px] font-bold text-secondary uppercase">Tue</span>
+<span class="text-sm font-bold text-primary">13</span>
+</div>
+<div class="p-3 text-center border-l border-surface-container-low">
+<span class="block text-[9px] font-bold text-secondary uppercase">Wed</span>
+<span class="text-sm font-bold text-primary">14</span>
+</div>
+<div class="p-3 text-center border-l border-surface-container-low">
+<span class="block text-[9px] font-bold text-secondary uppercase">Thu</span>
+<span class="text-sm font-bold text-primary">15</span>
+</div>
+<div class="p-3 text-center border-l border-surface-container-low">
+<span class="block text-[9px] font-bold text-secondary uppercase">Fri</span>
+<span class="text-sm font-bold text-primary">16</span>
+</div>
+</div>
+<!-- Time Slots & Grid -->
+<div class="relative">
+<!-- Slot: 09:00 -->
+<div class="schedule-grid min-h-[100px] border-b border-surface-container-low">
+<div class="flex items-center justify-center border-r border-surface-container-low italic text-[10px] text-secondary/60">09:00</div>
+<div class="p-1.5">
+<div class="h-full w-full rounded-lg p-2 bg-primary-fixed border border-primary/10 flex flex-col justify-between">
+<span class="text-[8px] font-bold text-primary uppercase">ARCH101</span>
+<h4 class="text-[10px] font-bold text-primary leading-tight">Design Theory</h4>
+<span class="text-[8px] font-semibold text-primary/80">Hall A</span>
+</div>
+</div>
+<div class="p-1.5"></div>
+<div class="p-1.5">
+<div class="h-full w-full rounded-lg p-2 bg-secondary-fixed border border-secondary/10 flex flex-col justify-between">
+<span class="text-[8px] font-bold text-secondary uppercase">HIST204</span>
+<h4 class="text-[10px] font-bold text-secondary leading-tight">Urban Evolution</h4>
+<span class="text-[8px] font-semibold text-secondary/80">R 302</span>
+</div>
+</div>
+<div class="p-1.5"></div>
+<div class="p-1.5">
+<div class="h-full w-full rounded-lg p-2 bg-tertiary-fixed/40 border border-on-tertiary-container/10 flex flex-col justify-between">
+<span class="text-[8px] font-bold text-on-tertiary-fixed-variant uppercase">LAB10</span>
+<h4 class="text-[10px] font-bold text-on-tertiary-fixed-variant leading-tight">CAD Workshop</h4>
+<span class="text-[8px] font-semibold text-on-tertiary-fixed-variant/80">Lab 4</span>
+</div>
+</div>
+</div>
+<!-- Slot: 11:00 -->
+<div class="schedule-grid min-h-[100px] border-b border-surface-container-low">
+<div class="flex items-center justify-center border-r border-surface-container-low italic text-[10px] text-secondary/60">11:00</div>
+<div class="p-1.5"></div>
+<div class="p-1.5">
+<div class="h-full w-full rounded-lg p-2 bg-primary text-white flex flex-col justify-between">
+<span class="text-[8px] font-bold opacity-60 uppercase">SEM402</span>
+<h4 class="text-[10px] font-bold leading-tight">Thesis Seminar</h4>
+<span class="text-[8px] font-semibold opacity-80">Annex</span>
+</div>
+</div>
+<div class="p-1.5"></div>
+<div class="p-1.5">
+<div class="h-full w-full rounded-lg p-2 bg-secondary-fixed border border-secondary/10 flex flex-col justify-between">
+<span class="text-[8px] font-bold text-secondary uppercase">HIST204</span>
+<h4 class="text-[10px] font-bold text-secondary leading-tight">Urban Evolution</h4>
+<span class="text-[8px] font-semibold text-secondary/80">Hall C</span>
+</div>
+</div>
+<div class="p-1.5"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Actions & Navigation Bar (Matches wireframe bottom buttons and structure) -->
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-surface-container-low z-[100] px-4 pb-8 pt-4">
+<!-- Primary Action Row from Wireframe -->
+<div class="flex items-center justify-between gap-3 mb-4">
+<button class="flex-1 bg-white border border-primary text-primary px-3 py-2 rounded font-bold text-[10px] flex items-center justify-center gap-1 uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">add</span>
+            Add Course
+        </button>
+<button class="bg-white border border-primary text-primary px-5 py-2 rounded font-bold text-[10px] uppercase tracking-wider">
+            Save
+        </button>
+<button class="bg-black text-white px-4 py-2 rounded font-bold text-[10px] uppercase tracking-wider">
+            Delete
+        </button>
+</div>
+<!-- Mobile Navigation Grid (Placeholder buttons as seen in wireframe) -->
+<div class="space-y-2">
+<button class="w-full bg-white border border-slate-200 text-slate-400 py-3 rounded text-[10px] font-bold uppercase tracking-widest text-center">Button full-w primary</button>
+<button class="w-full bg-white border border-slate-200 text-slate-400 py-3 rounded text-[10px] font-bold uppercase tracking-widest text-center">Button full-w primary</button>
+</div>
+</div>
+</body></html>
