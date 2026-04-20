@@ -82,7 +82,6 @@ fun IMSApp() {
         when (currentDestination) {
             AppDestination.LOGIN -> LoginScreen(
                 modifier = Modifier.padding(innerPadding),
-                quickUsers = userProfiles,
                 onValidateCredentials = { username, password ->
                     data.users.firstOrNull {
                         it.username == username && it.password == password
